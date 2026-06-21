@@ -682,6 +682,23 @@ void draw_hook(plume::RenderCommandList* command_list, plume::RenderFramebuffer*
 
     bool all_input_is_disabled = recompinput::all_input_disabled();
 
+    // On high-DPI displays (e.g. macOS Retina with SDL_WINDOW_ALLOW_HIGHDPI) SDL reports mouse
+    // coordinates in logical points, while the RmlUi context is sized in physical pixels (it is
+    // sized from the swap chain framebuffer). Compute the point->pixel ratio so mouse coordinates
+    // can be scaled to match the context. On non-high-DPI displays this ratio is 1.0 and is a no-op.
+    float mouse_point_to_pixel_x = 1.0f;
+    float mouse_point_to_pixel_y = 1.0f;
+    {
+        int window_w = 0, window_h = 0;
+        int pixel_w = 0, pixel_h = 0;
+        SDL_GetWindowSize(window, &window_w, &window_h);
+        SDL_GetWindowSizeInPixels(window, &pixel_w, &pixel_h);
+        if (window_w > 0 && window_h > 0) {
+            mouse_point_to_pixel_x = static_cast<float>(pixel_w) / static_cast<float>(window_w);
+            mouse_point_to_pixel_y = static_cast<float>(pixel_h) / static_cast<float>(window_h);
+        }
+    }
+
     while (recompui::try_deque_event(cur_event)) {
         bool context_capturing_input = recompui::is_context_capturing_input();
         bool context_capturing_mouse = recompui::is_context_capturing_mouse();
@@ -760,7 +777,7 @@ void draw_hook(plume::RenderCommandList* command_list, plume::RenderFramebuffer*
                     ui_state->await_stick_return_x = true;
                 }
                 break;
-            case SDL_EventType::SDL_CONTROLLERAXISMOTION:
+            case SDL_EventType::SDL_CONTROLLERAXISMOTION: {
                 SDL_ControllerAxisEvent* axis_event = &cur_event.caxis;
                 if (axis_event->axis != SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_LEFTY && axis_event->axis != SDL_GameControllerAxis::SDL_CONTROLLER_AXIS_LEFTX) {
                     break;
@@ -793,6 +810,27 @@ void draw_hook(plume::RenderCommandList* command_list, plume::RenderFramebuffer*
                     }
                 }
                 break;
+            }
+            case SDL_EventType::SDL_WINDOWEVENT: {
+                // The UI context dimensions are owned by the render hook, which sizes the context
+                // from the swap chain framebuffer (in physical pixels). Don't forward window events
+                // to RmlUi's SDL backend: its SDL_WINDOWEVENT_SIZE_CHANGED handler would overwrite
+                // the dimensions with the window size in logical points, which on high-DPI displays
+                // is half the framebuffer size and shrinks the UI into a corner. Handle window-leave
+                // here so the hovered cursor state is still cleared.
+                if (cur_event.window.event == SDL_WINDOWEVENT_LEAVE) {
+                    ui_state->context->ProcessMouseLeave();
+                }
+                continue;
+            }
+            }
+
+            // Scale mouse motion coordinates from logical points to physical pixels so they line up
+            // with the RmlUi context dimensions on high-DPI displays. Only motion events carry a
+            // position into RmlUi; button events reuse the last position from the most recent move.
+            if (cur_event.type == SDL_EventType::SDL_MOUSEMOTION) {
+                cur_event.motion.x = static_cast<Sint32>(cur_event.motion.x * mouse_point_to_pixel_x + 0.5f);
+                cur_event.motion.y = static_cast<Sint32>(cur_event.motion.y * mouse_point_to_pixel_y + 0.5f);
             }
 
             // Send the event to RmlUi if this type of event is being captured.
