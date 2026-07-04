@@ -548,7 +548,11 @@ namespace recompui {
         menu_container->set_bottom(24.0f);
         menu_container->set_left(24.0f);
 
-        version_label = context.create_element<Label>(this, "v" + recomp::get_project_version().to_string(), LabelStyle::Small);
+        // macOS fork: show the fork's own version + the upstream base it was built from. The numeric
+        // recomp::get_project_version() stays the UPSTREAM version (1.0.1) — it drives mod-compat
+        // checks, which are authored against upstream — so only the display string carries the fork
+        // number. Keep "1.1.0-macOS" in sync with the bundle version in .github/macos/apple_bundle.cmake.
+        version_label = context.create_element<Label>(this, "v1.1.0-macOS (upstream v" + recomp::get_project_version().to_string() + ")", LabelStyle::Small);
         version_label->set_position(Position::Absolute);
         version_label->set_bottom(4.0f);
         version_label->set_left(4.0f);
