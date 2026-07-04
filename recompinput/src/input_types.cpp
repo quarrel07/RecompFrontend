@@ -230,6 +230,14 @@ static std::unordered_map<SDL_Scancode, std::string> scancode_codepoints{
     {SDL_SCANCODE_NUMLOCKCLEAR, PF_KEYBOARD_NUM_LOCK},
     {SDL_SCANCODE_LSHIFT, "L" PF_KEYBOARD_SHIFT},
     {SDL_SCANCODE_RSHIFT, "R" PF_KEYBOARD_SHIFT},
+    // Other modifiers were also missing, so binding one showed "?". This is the macOS fork, so the
+    // Option/Command keys use dedicated Mac glyphs (⌥/⌘) rather than the generic Alt/Super glyphs.
+    {SDL_SCANCODE_LCTRL, "L" PF_KEYBOARD_CONTROL},
+    {SDL_SCANCODE_RCTRL, "R" PF_KEYBOARD_CONTROL},
+    {SDL_SCANCODE_LALT, "L" PF_KEYBOARD_OPTION},
+    {SDL_SCANCODE_RALT, "R" PF_KEYBOARD_OPTION},
+    {SDL_SCANCODE_LGUI, "L" PF_KEYBOARD_COMMAND},
+    {SDL_SCANCODE_RGUI, "R" PF_KEYBOARD_COMMAND},
 };
 
 static std::string keyboard_input_to_string(SDL_Scancode key) {

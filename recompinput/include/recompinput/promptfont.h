@@ -533,6 +533,13 @@
 #define PF_KEYBOARD_SHIFT_INT 0x02429
 #define PF_KEYBOARD_SUPER "␪"
 #define PF_KEYBOARD_SUPER_INT 0x0242A
+// macOS-fork additions: dedicated Mac modifier glyphs at their real Unicode codepoints (⌥ U+2325,
+// ⌘ U+2318), so this stays a superset of stock promptfont — the generic Alt (U+2428) / Super (U+242A)
+// glyphs above are left intact. Draw these two slots in assets/promptfont/promptfont.ttf.
+#define PF_KEYBOARD_OPTION "⌥"
+#define PF_KEYBOARD_OPTION_INT 0x02325
+#define PF_KEYBOARD_COMMAND "⌘"
+#define PF_KEYBOARD_COMMAND_INT 0x02318
 #define PF_KEYBOARD_TAB "␫"
 #define PF_KEYBOARD_TAB_INT 0x0242B
 #define PF_KEYBOARD_CAPS "␬"
